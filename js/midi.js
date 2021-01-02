@@ -65,6 +65,8 @@ export function describeMessage(msg) {
     // handle clock as a special case for BPM
     if (channel == 8) {
       clocks++
+      // Return nothing, so clock messages are NOT logged
+      return null
     }
     if (channel == 10) {
       subcmd = 'start'
@@ -75,7 +77,6 @@ export function describeMessage(msg) {
       resetClock()
     }
     if (subcmd) return `${timestamp} — Real-time ${subcmd}`
-    return null
   }
 
   let desc = describeMessages[cmd]
@@ -84,7 +85,7 @@ export function describeMessage(msg) {
     return `${timestamp} — ${desc.name} | ${desc.value}: ${msg.data[1]} |${value2Text} channel: ${channel + 1}`
   }
 
-  return `${timestamp} — Unknown msg (${cmd},${channel}) | note: ${msg.data[1]} | channel: ${channel + 1}`
+  return `${timestamp} — Unknown (${cmd},${channel}) | value-1: ${msg.data[1]} | value-2: ${msg.data[2]} | channel: ${channel + 1}`
 }
 
 export function byteToNibbles(byte) {
