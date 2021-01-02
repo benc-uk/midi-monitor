@@ -2,6 +2,7 @@ import * as midi from './midi.js'
 
 let deviceSel = null
 let monitorBtn = null
+let clearBtn = null
 let clockDisplay = null
 let log = null
 let midiDevice = null
@@ -15,9 +16,11 @@ window.addEventListener('load', async () => {
   log = document.getElementById('log')
   deviceSel = document.getElementById('deviceSel')
   monitorBtn = document.getElementById('monitorBtn')
+  clearBtn = document.getElementById('clearBtn')
   clockDisplay = document.getElementById('clock')
   deviceSel.addEventListener('change', deviceSelected)
   monitorBtn.addEventListener('click', startStopClicked)
+  clearBtn.addEventListener('click', clearMonitor)
   clockDisplay.innerHTML = `⌚ Clock: None detected`
 
   await midi.getAccess(setupDevices)
@@ -83,11 +86,14 @@ function startMonitoring() {
   midiDevice.addEventListener('midimessage', messageListener)
 }
 
-function clearMonitor() {}
+function clearMonitor() {
+  log.innerHTML = ''
+}
 
 function deviceSelected(evt) {
   if (!evt.target.value) return
 
+  stopMonitoring()
   midiDevice = midi.access.inputs.get(evt.target.value)
   monitorBtn.disabled = false
   startMonitoring()
