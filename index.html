@@ -7,13 +7,16 @@
 
     <script src="js/main.js" type="module"></script>
     <link rel="stylesheet" href="css/main.css" />
+    <link rel="shortcut icon" href="https://github.com/benc-uk/touchmidi/raw/main/src/assets/favicon.png" type="image/png" />
   </head>
 
   <body>
     <div id="main">
       <div id="title">🎹 MIDI Monitor v1.0.0 - Ben Coleman <a href="https://github.com/benc-uk/midi-monitor" target="_blank">[ GitHub ]</a></div>
       <div id="controls">
-        <select name="device" id="deviceSel"></select>
+        <select name="device" id="deviceSel">
+          <option value="" disabled selected>No MIDI devices!</option>
+        </select>
         <button id="monitorBtn" disabled>No Device</button>
         <button id="clearBtn">Clear Output</button>
         <span class="spacer"></span>

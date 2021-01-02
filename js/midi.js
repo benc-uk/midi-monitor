@@ -1,5 +1,6 @@
 export let access
-//let bpm = null
+
+// Used for BPM calculations
 let clocks = 0
 let oldClocks = 0
 let bpmListeners = []
@@ -11,21 +12,21 @@ const MSG_POLYTOUCH = 10
 const MSG_NOTE_ON = 9
 const MSG_NOTE_OFF = 8
 
-const commands = {
+const describeMessages = {
   13: {
-    desc: 'Aftertouch',
+    name: 'Aftertouch',
     value: 'pressure'
   },
   11: {
-    desc: 'Control',
+    name: 'Control',
     value: 'CC'
   },
   9: {
-    desc: 'Note on ',
+    name: 'Note on ',
     value: 'note'
   },
   8: {
-    desc: 'Note off',
+    name: 'Note off',
     value: 'note'
   }
 }
@@ -36,12 +37,12 @@ export async function getAccess() {
       access = await navigator.requestMIDIAccess()
     }
 
+    // Check BPM very 1 second
     setInterval(calcBPM, 1000)
 
     return access
   } catch (err) {
     console.error('MIDI getAccess failed', err)
-    //alert("Unable to get MIDI access\nYour browser doesn't support MIDI, try using Chrome or Edge")
   }
 }
 
@@ -61,7 +62,7 @@ export function describeMessage(msg) {
   if (cmd == MSG_COMMON) {
     let subcmd = ''
 
-    // handle clock
+    // handle clock as a special case for BPM
     if (channel == 8) {
       clocks++
     }
@@ -77,10 +78,10 @@ export function describeMessage(msg) {
     return null
   }
 
-  let text = commands[cmd]
-  if (text) {
+  let desc = describeMessages[cmd]
+  if (desc) {
     let value2Text = msg.data[2] ? ` value: ${msg.data[2]} |` : ''
-    return `${timestamp} — ${text.desc} | ${text.value}: ${msg.data[1]} |${value2Text} channel: ${channel + 1}`
+    return `${timestamp} — ${desc.name} | ${desc.value}: ${msg.data[1]} |${value2Text} channel: ${channel + 1}`
   }
 
   return `${timestamp} — Unknown msg (${cmd},${channel}) | note: ${msg.data[1]} | channel: ${channel + 1}`
