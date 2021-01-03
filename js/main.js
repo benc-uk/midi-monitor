@@ -73,6 +73,7 @@ function stopMonitoring() {
   clockDisplay.innerHTML = `⌚ Clock: None detected`
   monitorBtn.innerHTML = `👁‍🗨 Start monitoring`
   midiDevice.removeEventListener('midimessage', messageListener)
+  log.innerHTML += `\n+++ Monitoring stopped\n`
 }
 
 function startMonitoring() {
@@ -84,6 +85,7 @@ function startMonitoring() {
   })
   monitorBtn.innerHTML = `🛑 Stop monitoring`
   midiDevice.addEventListener('midimessage', messageListener)
+  log.innerHTML += `\n+++ Monitoring started on ${midiDevice.name}\n`
 }
 
 function clearMonitor() {
