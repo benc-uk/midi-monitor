@@ -6,7 +6,7 @@ Written in plain JS and HTML5 :)
 Features:
 - Displays note and CC message information
 - Real time stop & start messages
-- Detects BPM if real-time clock is received
+- Detects BPM if real-time clock is received. BPM calculation is not 100% accurate
 - Other message types supported: aftertouch
 - Not supported: SysEx
 
