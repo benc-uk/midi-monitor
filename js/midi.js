@@ -84,7 +84,7 @@ export function describeMessage(msg) {
   let timestamp = `${hrs}:${mins}:${secs}:${msecs}`
 
   // System common messages (clock, stop, start, etc)
-  // Note. The channel nibble determines message type, as these messages are global
+  // Note. Here the channel nibble actually denotes message *sub-type* NOT the channel, as these messages are global
   if (cmd == MSG_SYSTEM) {
     let subcmd = ''
 
