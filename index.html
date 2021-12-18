@@ -1,30 +1,184 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>MIDI Monitor</title>
+<html lang="en" class="h-full">
 
-    <script src="js/main.js" type="module"></script>
-    <link rel="stylesheet" href="css/main.css" />
-    <link rel="shortcut icon" href="https://github.com/benc-uk/touchmidi/raw/main/src/assets/favicon.png" type="image/png" />
-  </head>
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MIDI Toolkit</title>
 
-  <body>
-    <div id="main">
-      <div id="title">🎹 MIDI Monitor v1.0.0 - Ben Coleman <a href="https://github.com/benc-uk/midi-monitor" target="_blank">[ GitHub ]</a></div>
-      <div id="controls">
-        <select name="device" id="deviceSel">
-          <option value="" disabled selected>No MIDI devices!</option>
-        </select>
-        <button id="monitorBtn" disabled>No Device</button>
-        <button id="clearBtn">Clear Output</button>
-        <span class="spacer"></span>
+  <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.4/css/all.css">
 
-        <span id="clock"></span>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="js/app.js" type="module"></script>
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/colors.css">
+  <link rel="stylesheet" href="css/main.css">
+
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎹</text></svg>">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet">
+
+</head>
+
+<body>
+  <div id="app" x-data="app" @hashchange.window="page = location.hash">
+    <!-- side menu -->
+    <nav>
+      <div class="navhead">
+        <h3>MIDI Toolkit</h2>
+      </div>
+      <hr>
+      <div>
+        <a class="btn" href="#monitor" :class="{'active': page === '#monitor'}">
+          <i class="fas fa-list-alt fa-fw"></i> MONITOR
+        </a>
+      </div>
+      <div>
+        <a class="btn" href="#tools" :class="{'active': page === '#tools'}">
+          <i class="fas fa-tools fa-fw"></i> TOOLS
+        </a>
+      </div>
+      <div>
+        <a class="btn" href="#clock" :class="{'active': page === '#clock'}">
+          <i class="fas fa-clock fa-fw"></i> CLOCK
+        </a>
+      </div>
+      <hr>
+      <div>
+        <a class="btn" href="#config" :class="{'active': page === '#config'}">
+          <i class="fas fa-cogs fa-fw"></i> CONFIG
+        </a>
+      </div>
+    </nav>
+
+    <!-- main content -->
+    <main class="flex-fill">
+      <div x-show="page === '#config'">
+        <header>
+          <i class="fas fa-cogs fa-fw"></i> &nbsp; Configuration
+        </header>
+
+        <section>
+          <header>Devices</header>
+          <div class="sub-section">
+            <div class="label">Input:</div>
+            <select @change="$store.config.save(); $dispatch('input-device-changed')"
+              x-model="$store.config.inputDevice">
+              <option value>None</option>
+              <template x-for="device in inputDevices" :key="device.id">
+                <option :value="device.id"
+                  x-text="`${device.name} ${device.manufacturer ? '('+device.manufacturer+')' : ''}`">
+                </option>
+              </template>
+            </select>
+          </div>
+
+          <div class="sub-section">
+            <div class="label">Output:</div>
+            <select x-model="$store.config.outputDevice" @change="$store.config.save()">
+              <option value">None</option>
+              <template x-for="device in outputDevices">
+                <option :value="device.id"
+                  x-text="`${device.name} ${device.manufacturer ? '('+device.manufacturer+')' : ''}`">
+                </option>
+              </template>
+            </select>
+          </div>
+        </section>
       </div>
 
-      <textarea id="log" disabled></textarea>
-    </div>
-  </body>
+      <div x-data="monitor" x-show="page === '#monitor'" @midi-ready.window="listenForMonitoring"
+        @input-device-changed.window="listenForMonitoring">
+        <header>
+          <i class="fas fa-list-alt fa-fw"></i> &nbsp; MIDI Monitor
+        </header>
+        <section class="flex">
+          <button class="btn outline" @click="paused = !paused">
+            <i class="fas fa-fw" :class="paused == true ? 'fa-play' : 'fa-pause'"></i> <span
+              x-text="paused == true ? 'START' : 'PAUSE'"></span>
+          </button>
+          <button class="btn outline" @click="log=[]"> <i class="fas fa-trash fa-fw"></i> CLEAR</button>
+        </section>
+
+        <section>
+          <div class="monitor-log" x-ref="monitor-log">
+            <table>
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Type</th>
+                  <th>Channel</th>
+                  <th>Data</th>
+                  <th>Value</th>
+                  <th>Details</th>
+                </tr>
+              </thead>
+              <tbody>
+                <template x-for="entry in log">
+                  <tr :class="entry.cssClass">
+                    <td class="font-mono" x-text="formatTimestamp(entry.timestamp)"></td>
+                    <td x-text="entry.type"></td>
+                    <td x-text="entry.channel"></td>
+                    <td x-text="entry.data1"></td>
+                    <td x-text="entry.data2"></td>
+                    <td x-text="entry.details"></td>
+                  </tr>
+                </template>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div x-show="page === '#tools'">
+        <header>
+          Message Tools
+        </header>
+      </div>
+
+      <div x-data="clock" @input-device-changed.window="listenForClock" @midi-ready.window="listenForClock"
+        x-show="page === '#clock'">
+        <header>
+          <i class="fas fa-clock fa-fw"></i> &nbsp; Clock &amp; Transport Tools
+        </header>
+        <section>
+          <header>Incoming</header>
+
+          <div class="sub-section">
+            <div class="label">Detected:</div>
+            <div class="bignum w20" x-text="bpm > 0 ? `${bpm} BPM` : 'No clock'"></div>
+          </div>
+
+          <div class="sub-section">
+            <div class="label">Transport:</div>
+            <div class="bignum w20" x-text="lastTransport"></div>
+          </div>
+        </section>
+
+        <section>
+          <header>Outgoing</header>
+          <div class="sub-section">
+            <div class="label">Send Clock:</div>
+            <button class="btn inline toggle" @click="sendClock = !sendClock" x-text="sendClock ? '✓': '✖'"
+              :class="{ 'disabled': ! sendClock }"></button>
+            <div disabled class="bignum w5rem" type="text" x-text="sendBpm" :class="{ 'disabled': ! sendClock }"></div>
+            <input type="range" class="w20" min="20" max="400" x-model="sendBpm" :disabled="!sendClock"></input>
+          </div>
+
+          <div class="sub-section">
+            <div class="label">Transport:</div>
+            <div class="bignum w20" x-text="lastTransport"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</body>
+
 </html>

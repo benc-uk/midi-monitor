@@ -1,3 +1,4 @@
+import Alpine from 'https://unpkg.com/alpinejs@3.7.0/dist/module.esm.js'
 import * as midi from './midi.js'
 
 let deviceSel = null
@@ -20,7 +21,7 @@ window.addEventListener('load', async () => {
   clockDisplay = document.getElementById('clock')
   deviceSel.addEventListener('change', deviceSelected)
   monitorBtn.addEventListener('click', startStopClicked)
-  clearBtn.addEventListener('click', clearMonitor)
+  //clearBtn.addEventListener('click', clearMonitor)
   clockDisplay.innerHTML = `⌚ Clock: None detected`
 
   await midi.getAccess(setupDevices)
@@ -30,6 +31,15 @@ window.addEventListener('load', async () => {
     <h1 style="color:#ee2222">Failed to get MIDI access</h1><br>This is likely because your browser doesn't support MIDI or permissions were not granted<br><br>Try again using Chrome or Edge</div>`
     return
   }
+
+  Alpine.data('midimonitor', () => ({
+    logMessages: '',
+
+    clearLog() {
+      this.logMessages = 'ss'
+    }
+  }))
+  Alpine.start()
 
   midi.access.onstatechange = setupDevices
   setupDevices()
@@ -88,9 +98,9 @@ function startMonitoring() {
   log.innerHTML += `\n+++ Monitoring started on ${midiDevice.name}\n`
 }
 
-function clearMonitor() {
-  log.innerHTML = ''
-}
+// function clearMonitor() {
+//   log.innerHTML = 'kkkkkkkk'
+// }
 
 function deviceSelected(evt) {
   if (!evt.target.value) return
