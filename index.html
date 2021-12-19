@@ -126,7 +126,7 @@
                     <td x-text="entry.type"></td>
                     <td x-text="entry.channel"></td>
                     <td x-text="entry.data1"></td>
-                    <td x-text="entry.data2"></td>
+                    <td x-text="entry.data2.toString(16)"></td>
                     <td x-text="entry.details"></td>
                   </tr>
                 </template>
@@ -152,12 +152,12 @@
 
           <div class="sub-section">
             <div class="label">Detected:</div>
-            <div class="bignum w20" x-text="bpm > 0 ? `${bpm} BPM` : 'No clock'"></div>
+            <div class="output w20" x-text="incomingBpm > 0 ? `${incomingBpm} BPM` : 'No clock'"></div>
           </div>
 
           <div class="sub-section">
-            <div class="label">Transport:</div>
-            <div class="bignum w20" x-text="lastTransport"></div>
+            <div class="label">Status:</div>
+            <div class="output w20" x-text="lastTransport"></div>
           </div>
         </section>
 
@@ -167,13 +167,16 @@
             <div class="label">Send Clock:</div>
             <button class="btn inline toggle" @click="sendClock = !sendClock" x-text="sendClock ? '✓': '✖'"
               :class="{ 'disabled': ! sendClock }"></button>
-            <div disabled class="bignum w5rem" type="text" x-text="sendBpm" :class="{ 'disabled': ! sendClock }"></div>
-            <input type="range" class="w20" min="20" max="400" x-model="sendBpm" :disabled="!sendClock"></input>
+            <div disabled class="output w5rem" type="text" x-text="sendClockBpm" :class="{ 'disabled': ! sendClock }">
+            </div>
+            <input type="range" class="w20" min="20" max="400" x-model="sendClockBpm" :disabled="!sendClock"></input>
           </div>
 
           <div class="sub-section">
-            <div class="label">Transport:</div>
-            <div class="bignum w20" x-text="lastTransport"></div>
+            <div class="label">Controls:</div>
+            <button class="btn inline" @click="sendStart()"> <i class="fas fa-play fa-fw"></i> Start</button>
+            <button class="btn inline" @click="sendStop()"> <i class="fas fa-stop fa-fw"></i> Stop</button>
+            <button class="btn inline" @click="sendContinue()"> <i class="fas fa-pause fa-fw"></i> Continue</button>
           </div>
         </section>
       </div>

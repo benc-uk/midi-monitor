@@ -186,8 +186,14 @@ option {
 .msg-system {
   color: var(--orange-500);
 }
+.msg-program {
+  color: var(--purple-400);
+}
+.msg-bank {
+  color: var(--sky-300);
+}
 
-.bignum {
+.output {
   font-size: 1.4rem;
   font-family: 'Consolas', monospace;
   font-weight: bold;
@@ -229,8 +235,4 @@ option {
   background-color: var(--gray-500);
   box-shadow: none;
   border: none;
-}
-
-[type='range'] {
-  color: aqua;
 }

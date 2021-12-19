@@ -3,21 +3,23 @@ export let access
 
 export const MSG_STATUS_SYSTEM = 15
 
-// System messages
-export const MSG_SYSEX_START = 0
-export const MSG_MTC = 1
-export const MSG_SONG_POSITION = 2
-export const MSG_SONG_SELECT = 3
-export const MSG_TUNE_REQUEST = 6
-export const MSG_SYSEX_END = 7
-export const MSG_CLOCK = 8
-export const MSG_START = 9
-export const MSG_CONTINUE = 10
-export const MSG_STOP = 11
-export const MSG_ACTIVE_SENSE = 12
-export const MSG_RESET = 13
+// System common messages
+export const MSG_SYSEX_START = 0x0
+export const MSG_MTC = 0x1
+export const MSG_SONG_POSITION = 0x2
+export const MSG_SONG_SELECT = 0x3
+export const MSG_TUNE_REQUEST = 0x6
+export const MSG_SYSEX_END = 0x7
 
-// Normal messages, with data values
+// System real time
+export const MSG_CLOCK = 0x8
+export const MSG_START = 0xa
+export const MSG_CONTINUE = 0xb
+export const MSG_STOP = 0xc
+export const MSG_ACTIVE_SENSE = 0xe
+export const MSG_RESET = 0xf
+
+// Channel voice messages, with data values
 export const MSG_PITCH_BEND = 14
 export const MSG_CHAN_AFTERTOUCH = 13
 export const MSG_PROG_CHANGE = 12
@@ -62,6 +64,7 @@ export function decodeMessage(msg) {
     output.isSystem = true
 
     switch (output.channel) {
+      // Common
       case MSG_SYSEX_START:
         output.type = 'SysEx start'
         break
@@ -70,6 +73,8 @@ export function decodeMessage(msg) {
         break
       case MSG_SONG_POSITION:
         output.type = 'Song position'
+        output.data1 = msg.data[1]
+        output.data2 = msg.data[2]
         break
       case MSG_SONG_SELECT:
         output.type = 'Song select'
@@ -80,6 +85,7 @@ export function decodeMessage(msg) {
       case MSG_SYSEX_END:
         output.type = 'SysEx end'
         break
+      // Real time
       case MSG_CLOCK:
         output.type = 'Clock'
         break
@@ -132,16 +138,17 @@ export function decodeMessage(msg) {
   return output
 
   /*
-  // Capture 'Bank Select' CCs as a special case
-  if (msg.data[1] == 0 && cmd == MSG_CC) return `${timestamp} — Bank Select | MSB: ${msg.data[2]} | channel: ${channel + 1}`
-  if (msg.data[1] == 32 && cmd == MSG_CC) return `${timestamp} — Bank Select | LSB: ${msg.data[2]} | channel: ${channel + 1}`
-
   // Capture 'NRPN' as a special case
   if (msg.data[1] == 98 && cmd == MSG_CC) return `${timestamp} — NRPN | LSB: ${msg.data[2]} | channel: ${channel + 1}`
   if (msg.data[1] == 99 && cmd == MSG_CC) return `${timestamp} — NPRN | MSB: ${msg.data[2]} | channel: ${channel + 1}`
   if (msg.data[1] == 6 && cmd == MSG_CC) return `${timestamp} — NRPN Value | MSB: ${msg.data[2]} | channel: ${channel + 1}`
   if (msg.data[1] == 38 && cmd == MSG_CC) return `${timestamp} — NPRN Value | LSB: ${msg.data[2]} | channel: ${channel + 1}`
-*/
+  */
+}
+
+export function sendSystemMessage(deviceId, subType) {
+  if (!access || !access.outputs.get(deviceId)) return
+  access.outputs.get(deviceId).send([0xf0 | subType])
 }
 
 // ===================================================
@@ -153,9 +160,20 @@ export function byteToNibbles(byte) {
   return [low, high]
 }
 
+// ===================================================
+// Convert a two part (MSB, LSB) num to a 14 bit value
+// ===================================================
+export function bytePairtoNumber(msb, lsb) {
+  return (msb << 7) + lsb
+}
+
+// ===================================================
 // Convert MIDI CC number to a name
+// ===================================================
 export function ccNumberToName(number) {
   switch (number) {
+    case 0:
+      return 'Bank Select MSB'
     case 1:
       return 'Modulation'
     case 2:
@@ -187,7 +205,7 @@ export function ccNumberToName(number) {
     case 19:
       return 'General Purpose 4'
     case 32:
-      return 'Bank Select'
+      return 'Bank Select LSB'
     case 33:
       return 'Modulation Wheel'
     case 34:
@@ -281,7 +299,9 @@ export function ccNumberToName(number) {
   }
 }
 
+// ===================================================
 // MIDI note number to name
+// ===================================================
 export function noteNumberToName(number) {
   switch (number) {
     case 0:

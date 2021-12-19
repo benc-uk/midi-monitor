@@ -5,6 +5,7 @@ export const monitorComponent = () => ({
   log: [],
   paused: false,
   monitoredDevice: null,
+  prevMessage: null,
 
   init() {
     this.$watch('log', () => {
@@ -34,37 +35,59 @@ export const monitorComponent = () => ({
     }
   },
 
-  messageListener(msg) {
+  messageListener(rawMidiMsg) {
     if (this.paused) return
 
-    let logEntry = midi.decodeMessage(msg)
+    let msg = midi.decodeMessage(rawMidiMsg)
 
-    if (!logEntry) return
+    if (!msg) return
     // We ignore these otherwise the log would be flooded
-    if (logEntry.type == 'Clock' || logEntry.type == 'MTC') return
+    if (msg.type == 'Clock' || msg.type == 'MTC') return
 
-    logEntry.cssClass = ''
-    switch (logEntry.type) {
+    msg.cssClass = ''
+    switch (msg.type) {
       case 'Note on':
       case 'Note off':
-        logEntry.cssClass = 'msg-note'
+        msg.cssClass = 'msg-note'
         break
       case 'Control change':
-        logEntry.cssClass = 'msg-control'
+        msg.cssClass = 'msg-control'
+        break
+      case 'Program change':
+        msg.cssClass = 'msg-program'
         break
     }
-    if (logEntry.isSystem) {
-      logEntry.cssClass = 'msg-system'
-      logEntry.channel = 'All'
+    if (msg.isSystem) {
+      msg.cssClass = 'msg-system'
+      msg.channel = 'All'
     }
-    if (logEntry.type == 'Control change') {
-      logEntry.details = midi.ccNumberToName(logEntry.data1)
+    if (msg.type == 'Control change') {
+      msg.details = midi.ccNumberToName(msg.data1)
     }
-    if (logEntry.type == 'Note on' || logEntry.type == 'Note off') {
-      logEntry.details = midi.noteNumberToName(logEntry.data1)
+    if (msg.type == 'Note on' || msg.type == 'Note off') {
+      msg.details = midi.noteNumberToName(msg.data1)
     }
 
-    this.log.push(logEntry)
+    if (msg.channel >= 0) {
+      msg.channel++
+    }
+    this.log.push(msg)
+
+    // Special case for bank select which is set over two CC messages
+    if (msg.type == 'Control change' && msg.data1 == 32) {
+      const value = midi.bytePairtoNumber(this.prevMessage.data2, msg.data2)
+      this.log.push({
+        timestamp: new Date(),
+        type: '[ Bank select ]',
+        cssClass: 'msg-bank',
+        channel: '',
+        data1: '',
+        data2: value,
+        details: '14 bit value'
+      })
+    }
+
+    this.prevMessage = msg
   },
 
   formatTimestamp(d) {

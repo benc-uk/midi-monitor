@@ -1,31 +1,51 @@
 import Alpine from 'https://unpkg.com/alpinejs@3.7.0/dist/module.esm.js'
 import * as midi from '../lib/midi.js'
+import { Timer } from '../lib/timer.js'
 
 export const clockComponent = () => ({
-  bpm: -1,
+  incomingBpm: -1,
+  bpmBuffer: [],
   ticks: 0,
   prevTicks: 0,
+
   monitoredDevice: null,
-  bpmBuffer: [],
+
   lastTransport: '',
   sendClock: false,
-  sendBpm: 120,
+  sendClockBpm: 120,
+  sendClockTimer: null,
 
   init() {
     console.log('### Initializing clock')
-    this.bpm = -1
+    this.incomingBpm = -1
     this.lastTransport = '···'
     this.calcBPM = this.calcBPM.bind(this)
 
     setInterval(() => {
       this.calcBPM()
     }, 1000)
+
+    this.$watch('sendClock', (enabled) => {
+      if (enabled) {
+        this.sendClockTimer.start()
+      } else {
+        this.sendClockTimer.stop()
+      }
+    })
+
+    this.$watch('sendClockBpm', (newBpm) => {
+      this.sendClockTimer.timeInterval = 2500 / newBpm
+    })
+
+    this.sendClockTimer = new Timer(() => {
+      midi.sendSystemMessage(Alpine.store('config').outputDevice, midi.MSG_CLOCK)
+    }, 2500 / this.sendClockBpm)
   },
 
   resetClock() {
     this.ticks = 0
     this.prevTicks = 0
-    this.bpm = -1
+    this.incommingBpm = -1
   },
 
   calcBPM() {
@@ -41,7 +61,7 @@ export const clockComponent = () => ({
       this.bpmBuffer.forEach((bpm) => {
         sum += bpm
       })
-      this.bpm = Math.round(sum / this.bpmBuffer.length)
+      this.incomingBpm = Math.round(sum / this.bpmBuffer.length)
     }
 
     this.prevTicks = this.ticks
@@ -60,7 +80,6 @@ export const clockComponent = () => ({
     this.resetClock()
 
     if (midi.access.inputs.get(inputDevice)) {
-      console.log(`### Start CLOCK monitoring ${inputDevice}`)
       this.messageListener = this.messageListener.bind(this)
       midi.access.inputs.get(inputDevice).addEventListener('midimessage', this.messageListener)
       this.monitoredDevice = inputDevice
@@ -78,5 +97,17 @@ export const clockComponent = () => ({
     if (logEntry.type == 'Clock') {
       this.ticks++
     }
+  },
+
+  sendStop() {
+    midi.sendSystemMessage(Alpine.store('config').outputDevice, midi.MSG_STOP)
+  },
+
+  sendStart() {
+    midi.sendSystemMessage(Alpine.store('config').outputDevice, midi.MSG_START)
+  },
+
+  sendContinue() {
+    midi.sendSystemMessage(Alpine.store('config').outputDevice, midi.MSG_CONTINUE)
   }
 })

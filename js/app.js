@@ -10,6 +10,10 @@ Alpine.data('app', () => ({
   midiAccess: null,
 
   async init() {
+    if (!window.location.hash) {
+      window.location.hash = '#monitor'
+      this.page = '#monitor'
+    }
     this.page = window.location.hash
     await midi.getAccess(this.setupDevices)
     midi.access.onstatechange = () => this.setupDevices()
