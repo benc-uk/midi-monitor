@@ -10,8 +10,12 @@ export const monitorComponent = () => ({
   init() {
     this.$watch('log', () => {
       // Scroll to bottom
-      this.$refs['monitor-log'].scrollTop = this.$refs['monitor-log'].scrollHeight
+      this.scrollToBottom()
     })
+  },
+
+  scrollToBottom() {
+    this.$refs['monitor-log'].scrollTop = this.$refs['monitor-log'].scrollHeight
   },
 
   listenForMonitoring() {

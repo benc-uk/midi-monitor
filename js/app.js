@@ -2,6 +2,7 @@ import Alpine from 'https://unpkg.com/alpinejs@3.7.0/dist/module.esm.js'
 import { monitorComponent } from './comp/monitor.js'
 import { clockComponent } from './comp/clock.js'
 import { toolsComponent } from './comp/tools.js'
+import { keysComponent } from './comp/keys.js'
 import * as midi from './lib/midi.js'
 
 Alpine.data('app', () => ({
@@ -30,10 +31,21 @@ Alpine.data('app', () => ({
       Alpine.store('config').inputDevice = ''
       Alpine.store('config').save()
     }
+
+    const outputDevice = Alpine.store('config').outputDevice
+    if (outputDevice && midi.access.outputs.get(outputDevice)) {
+      console.log(`### Using output device ${midi.access.outputs.get(outputDevice).name}`)
+      this.$dispatch('midi-ready')
+    } else if (outputDevice) {
+      console.log(`### WARNING! Device ${outputDevice} is no longer present`)
+      Alpine.store('config').outputDevice = ''
+      Alpine.store('config').save()
+    }
   },
 
   setupDevices() {
     console.log('### Detecting MIDI devices...')
+
     this.inputDevices = []
     this.outputDevices = []
     for (let input of midi.access.inputs.values()) {
@@ -68,10 +80,12 @@ Alpine.data('app', () => ({
 Alpine.data('monitor', monitorComponent)
 Alpine.data('clock', clockComponent)
 Alpine.data('tools', toolsComponent)
+Alpine.data('keys', keysComponent)
 
 Alpine.store('config', {
   inputDevice: '',
-  outputDevice: ''
+  outputDevice: '',
+  channel: 0
 })
 
 Alpine.start()

@@ -49,6 +49,11 @@
           <i class="fas fa-clock fa-fw"></i> CLOCK
         </a>
       </div>
+      <div>
+        <a class="btn" href="#keys" :class="{'active': page === '#keys'}">
+          <i class="fas fa-music fa-fw"></i> KEYS
+        </a>
+      </div>
       <hr>
       <div>
         <a class="btn" href="#config" :class="{'active': page === '#config'}">
@@ -59,6 +64,7 @@
 
     <!-- main content -->
     <main class="flex-fill">
+      <!-- config page -->
       <div x-show="page === '#config'">
         <header>
           <i class="fas fa-cogs fa-fw"></i> &nbsp; Configuration
@@ -66,7 +72,7 @@
 
         <section>
           <header>Devices</header>
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Input:</div>
             <select @change="$store.config.save(); $dispatch('input-device-changed')"
               x-model="$store.config.inputDevice">
@@ -79,7 +85,7 @@
             </select>
           </div>
 
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Output:</div>
             <select x-model="$store.config.outputDevice" @change="$store.config.save()">
               <option value">None</option>
@@ -93,6 +99,7 @@
         </section>
       </div>
 
+      <!-- message monitor page -->
       <div x-data="monitor" x-show="page === '#monitor'" @midi-ready.window="listenForMonitoring"
         @input-device-changed.window="listenForMonitoring">
         <header>
@@ -136,19 +143,22 @@
         </section>
       </div>
 
+      <!-- Message tools page -->
       <div x-data="tools" x-show="page === '#tools'">
         <header>
           <i class="fas fa-tools fa-fw"></i> Message Tools
         </header>
         <section>
           <header>Channel</header>
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Number:</div>
-            <div class="output" x-text="channel+1"></div>
-            <button class="btn inline w3rem" @click="channel--; if(channel < 0) channel = 0">
+            <div class="output w4rem block" x-text="$store.config.channel+1"></div>
+            <button class="btn inline w3rem"
+              @click="$store.config.channel--; if($store.config.channel < 0) $store.config.channel = 0; $store.config.save()">
               <i class="fas fa-minus"></i>
             </button>
-            <button class="btn inline w3rem" @click="channel++; if(channel > 15) channel = 15">
+            <button class="btn inline w3rem"
+              @click="$store.config.channel++; if($store.config.channel > 15) $store.config.channel = 15; $store.config.save()">
               <i class="fas fa-plus"></i>
             </button>
           </div>
@@ -156,8 +166,8 @@
 
         <section>
           <header>Control Messages (CC)</header>
-          <div class="sub-section">
-            <div class="label">CC Number:</div>
+          <div class="row">
+            <div class="label">Number:</div>
             <select x-model="ccNumber">
               <template x-for="cc in ccList">
                 <option :value="cc.number" x-text="cc.name"></option>
@@ -165,50 +175,74 @@
             </select>
           </div>
 
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Value:</div>
             <input type="range" class="w20" min="0" max="127" x-model="ccValue"></input>
-            <div class="output gray" type="text" x-text="ccValue"></div>
+            <div class="output gray w4rem" type="text" x-text="ccValue"></div>
+            <button class="btn inline toggle" @click="sendOnChange = !sendOnChange" x-text="sendOnChange ? '✓': '✖'"
+              :class="{ 'disabled': ! sendOnChange }"></button> <span class="hint"
+              @click="sendOnChange = !sendOnChange">Auto send</span>
           </div>
 
-          <div class="sub-section">
+          <div class="row">
             <div class="label"></div>
-            <button class="btn inline" style="margin-left:0" @click="sendCC">
-              <i class="fas fa-envelope"></i> SEND MESSAGE
+            <button class="btn inline" @click="sendCC">
+              <i class="fas fa-bolt fa-fw"></i> SEND
             </button>
           </div>
         </section>
 
         <section>
           <header>Non-Registered Parameter Numbers (NRPN)</header>
-          <div class="sub-section flex">
+          <div class="row">
             <div class="label"></div>
-            <div class="w25 center">MSB</div>
-            <div class="w25 center">LSB</div>
+            <div class="w5rem center"><b>MSB</b></div>
+            <div class="w3rem"><b>LSB</b></div>
+            <div class="w8rem center"><b>Value</b></div>
           </div>
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Number:</div>
-            <input type="range" class="w20" min="0" max="127"></input>
-            <div class="output gray" type="text" x-text="ccValue"></div>
-            <input type="range" class="w20" min="0" max="127"></input>
-            <div class="output gray" type="text" x-text="ccValue"></div>
+            <select x-model="nrpnNumMsb" @change="updateNrpnNum">
+              <template x-for="n in sevenBitNums">
+                <option :value="n" x-text="n"></option>
+              </template>
+            </select>
+
+            <select x-model="nrpnNumLsb" @change="updateNrpnNum">
+              <template x-for="n in sevenBitNums">
+                <option :value="n" x-text="n"></option>
+              </template>
+            </select>
+            &nbsp;
+            <div class="output w5rem" type="text" x-text="nrpnNum"></div>
           </div>
 
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Value:</div>
-            <input type="range" class="w20" min="0" max="127"></input>
-            <div class="output gray" type="text" x-text="ccValue"></div>
-            <input type="range" class="w20" min="0" max="127"></input>
-            <div class="output gray" type="text" x-text="ccValue"></div>
+            <select x-model="nrpnValueMsb" @change="updateNrpnValue">
+              <template x-for="n in sevenBitNums">
+                <option :value="n" x-text="n"></option>
+              </template>
+            </select>
+
+            <select x-model="nrpnValueLsb" @change="updateNrpnValue">
+              <option value="-1">NA</option>
+              <template x-for="n in sevenBitNums">
+                <option :value="n" x-text="n"></option>
+              </template>
+            </select>
+            &nbsp;
+            <div class="output w5rem" type="text" x-text="nrpnValue"></div>
           </div>
 
           <div class="label"></div>
-          <button class="btn inline" style="margin-left:0" @click="sendCC">
-            <i class="fas fa-envelope"></i> SEND MESSAGE
+          <button class="btn inline" @click="sendNRPN">
+            <i class="fas fa-bolt fa-fw"></i> SEND
           </button>
         </section>
       </div>
 
+      <!-- Clock page -->
       <div x-data="clock" @input-device-changed.window="listenForClock" @midi-ready.window="listenForClock"
         x-show="page === '#clock'">
         <header>
@@ -217,12 +251,12 @@
         <section>
           <header>Incoming</header>
 
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Detected:</div>
             <div class="output w20" x-text="incomingBpm > 0 ? `${incomingBpm} BPM` : 'No clock'"></div>
           </div>
 
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Status:</div>
             <div class="output w20" x-text="lastTransport"></div>
           </div>
@@ -230,22 +264,67 @@
 
         <section>
           <header>Outgoing</header>
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Send Clock:</div>
-            <button class="btn inline toggle" @click="sendClock = !sendClock" x-text="sendClock ? '✓': '✖'"
+            <button class="btn toggle" @click="sendClock = !sendClock" x-html="sendClock ? '✓': '✖'"
               :class="{ 'disabled': ! sendClock }"></button>
-            <div disabled class="output w5rem" type="text" x-text="sendClockBpm" :class="{ 'disabled': ! sendClock }">
-            </div>
+            <div disabled class="output w4rem" type="text" x-text="sendClockBpm" :class="{ 'disabled': ! sendClock }">
+            </div> &nbsp;
             <input type="range" class="w20" min="20" max="400" x-model="sendClockBpm" :disabled="!sendClock"></input>
           </div>
 
-          <div class="sub-section">
+          <div class="row">
             <div class="label">Controls:</div>
             <button class="btn inline" @click="sendStart()"> <i class="fas fa-play fa-fw"></i> Start</button>
             <button class="btn inline" @click="sendStop()"> <i class="fas fa-stop fa-fw"></i> Stop</button>
             <button class="btn inline" @click="sendContinue()"> <i class="fas fa-pause fa-fw"></i> Continue</button>
           </div>
         </section>
+      </div>
+
+      <div x-data="keys" x-show="page === '#keys'">
+        <header>
+          <i class="fas fa-music fa-fw"></i> &nbsp; Keyboard
+        </header>
+
+        <div class="row" style="gap: 0.3rem">
+          <div class="key" @mousedown="playKey(0)" @mouseup="releaseKey(0)">
+            <span>C</span>
+            <div class="key-black" @mousedown="playKey(1)" @mouseup="releaseKey(1)">
+              <span>C♯</span>
+            </div>
+          </div>
+          <div class="key">
+            <span @click="playKey(2)">D</span>
+            <div class="key-black">
+              <span>D♯</span>
+            </div>
+          </div>
+          <div class="key">
+            <span>E</span>
+          </div>
+          <div class="key">
+            <span>F</span>
+            <div class="key-black">
+              <span>F♯</span>
+            </div>
+          </div>
+          <div class="key">
+            <span>G</span>
+            <div class="key-black">
+              <span>G♯</span>
+            </div>
+          </div>
+          <div class="key">
+            <span>A</span>
+            <div class="key-black">
+              <span>A♯</span>
+            </div>
+          </div>
+          <div class="key">
+            <span>B</span>
+          </div>
+        </div>
       </div>
     </main>
   </div>

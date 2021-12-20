@@ -136,14 +136,18 @@ export function decodeMessage(msg) {
   output.data2 = msg.data[2]
 
   return output
+}
 
-  /*
-  // Capture 'NRPN' as a special case
-  if (msg.data[1] == 98 && cmd == MSG_CC) return `${timestamp} — NRPN | LSB: ${msg.data[2]} | channel: ${channel + 1}`
-  if (msg.data[1] == 99 && cmd == MSG_CC) return `${timestamp} — NPRN | MSB: ${msg.data[2]} | channel: ${channel + 1}`
-  if (msg.data[1] == 6 && cmd == MSG_CC) return `${timestamp} — NRPN Value | MSB: ${msg.data[2]} | channel: ${channel + 1}`
-  if (msg.data[1] == 38 && cmd == MSG_CC) return `${timestamp} — NPRN Value | LSB: ${msg.data[2]} | channel: ${channel + 1}`
-  */
+export function sendNoteOnMessage(deviceId, channel, noteNum, velocity) {
+  if (!access || !access.outputs.get(deviceId)) return
+  console.log('sendNoteOnMessage', deviceId, channel, noteNum, velocity)
+  access.outputs.get(deviceId).send([0x90 | channel, noteNum, velocity])
+}
+
+export function sendNoteOffMessage(deviceId, channel, noteNum) {
+  if (!access || !access.outputs.get(deviceId)) return
+  console.log('sendNoteOffMessage', deviceId, channel, noteNum, 0)
+  access.outputs.get(deviceId).send([0x80 | channel, noteNum, 0])
 }
 
 export function sendSystemMessage(deviceId, subType) {
@@ -154,6 +158,18 @@ export function sendSystemMessage(deviceId, subType) {
 export function sendCCMessage(deviceId, channel, cc, value) {
   if (!access || !access.outputs.get(deviceId)) return
   access.outputs.get(deviceId).send([0xb0 | channel, cc, value])
+}
+
+export function sendNRPNMessage(deviceId, channel, numMsb, numLsb, valueMsb, valueLsb) {
+  console.log('sendNRPNMessage', deviceId, channel, numMsb, numLsb, valueMsb, valueLsb)
+  if (!access || !access.outputs.get(deviceId)) return
+  access.outputs.get(deviceId).send([0xb0 | channel, 99, numMsb])
+  access.outputs.get(deviceId).send([0xb0 | channel, 98, numLsb])
+  access.outputs.get(deviceId).send([0xb0 | channel, 6, valueMsb])
+
+  if (valueLsb >= 0) {
+    access.outputs.get(deviceId).send([0xb0 | channel, 38, valueLsb])
+  }
 }
 
 // ===================================================
@@ -570,40 +586,62 @@ export function noteNumberToName(number) {
   }
 }
 
-export const ccList = [
-  { name: 'Bank Select', number: 0 },
-  { name: 'Modulation Wheel', number: 1 },
-  { name: 'Breath Controller', number: 2 },
-  { name: 'Undefined', number: 3 },
-  { name: 'Foot Controller', number: 4 },
-  { name: 'Portamento Time', number: 5 },
-  { name: 'Data Entry MSB', number: 6 },
-  { name: 'Channel Volume', number: 7 },
-  { name: 'Balance', number: 8 },
-  { name: 'Undefined', number: 9 },
-  { name: 'Pan', number: 10 },
-  { name: 'Expression Controller', number: 11 },
-  { name: 'Effect Control 1', number: 12 },
-  { name: 'Effect Control 2', number: 13 },
-  { name: 'Undefined', number: 14 },
-  { name: 'Undefined', number: 15 },
-  { name: 'General Purpose Controller 1', number: 16 },
-  { name: 'General Purpose Controller 2', number: 17 },
-  { name: 'General Purpose Controller 3', number: 18 },
-  { name: 'General Purpose Controller 4', number: 19 },
-  { name: 'Undefined', number: 20 },
-  { name: 'Undefined', number: 21 },
-  { name: 'Undefined', number: 22 },
-  { name: 'Undefined', number: 23 },
-  { name: 'Undefined', number: 24 },
-  { name: 'Undefined', number: 25 },
-  { name: 'Undefined', number: 26 },
-  { name: 'Undefined', number: 27 },
-  { name: 'Undefined', number: 28 },
-  { name: 'Undefined', number: 29 },
-  { name: 'Undefined', number: 30 },
-  { name: 'Undefined', number: 31 },
-  { name: 'Bank Select LSB', number: 32 },
-  { name: 'Modulation Wheel', number: 33 },
-  { name: 'Breath Controller', number: 34 }
-]
+export const ccList = {
+  0: 'Bank Select MSB',
+  1: 'Modulation Wheel',
+  2: 'Breath Controller',
+  4: 'Foot Controller',
+  5: 'Portamento Time',
+  6: 'Data Entry',
+  7: 'Channel Volume',
+  8: 'Balance',
+  10: 'Pan',
+  11: 'Expression Controller',
+  12: 'Effect Control 1',
+  13: 'Effect Control 2',
+  16: 'General Purpose 1',
+  17: 'General Purpose 2',
+  18: 'General Purpose 3',
+  19: 'General Purpose 4',
+  32: 'Bank Select LSB',
+  64: 'Sustain Pedal',
+  65: 'Portamento',
+  66: 'Sostenuto',
+  67: 'Soft Pedal',
+  68: 'Legato Footswitch',
+  69: 'Hold 2',
+  70: 'Sound 1 (Variation)',
+  71: 'Sound 2 (Resonance)',
+  72: 'Sound 3 (Release)',
+  73: 'Sound 4 (Attack)',
+  74: 'Sound 5 (Cutoff)',
+  75: 'Sound 6',
+  76: 'Sound 7',
+  77: 'Sound 8',
+  78: 'Sound 9',
+  79: 'Sound 10',
+  80: 'General Purpose 5',
+  81: 'General Purpose 6',
+  82: 'General Purpose 7',
+  83: 'General Purpose 8',
+  84: 'Portamento Control',
+  91: 'Effects 1 (Reverb)',
+  92: 'Effects 2 (Tremolo)',
+  93: 'Effects 3 (Chorus)',
+  94: 'Effects 4 (Celeste)',
+  95: 'Effects 5 (Phaser)',
+  96: 'Data Increment',
+  97: 'Data Decrement',
+  98: 'NRPN LSB',
+  99: 'NRPN MSB',
+  100: 'RPN LSB',
+  101: 'RPN MSB',
+  120: 'All Sound Off',
+  121: 'All Controllers Off',
+  122: 'Local Keyboard',
+  123: 'All Notes Off',
+  124: 'Omni Mode Off',
+  125: 'Omni Mode On',
+  126: 'Mono Operation',
+  127: 'Poly Operation'
+}
