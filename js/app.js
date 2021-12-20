@@ -1,6 +1,7 @@
 import Alpine from 'https://unpkg.com/alpinejs@3.7.0/dist/module.esm.js'
 import { monitorComponent } from './comp/monitor.js'
 import { clockComponent } from './comp/clock.js'
+import { toolsComponent } from './comp/tools.js'
 import * as midi from './lib/midi.js'
 
 Alpine.data('app', () => ({
@@ -66,6 +67,7 @@ Alpine.data('app', () => ({
 
 Alpine.data('monitor', monitorComponent)
 Alpine.data('clock', clockComponent)
+Alpine.data('tools', toolsComponent)
 
 Alpine.store('config', {
   inputDevice: '',

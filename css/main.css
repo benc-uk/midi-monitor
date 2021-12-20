@@ -207,9 +207,10 @@ option {
   margin: 0 !important;
 }
 
-[type='checkbox'] {
-  width: 2rem;
-  height: 2rem;
+.gray {
+  background-color: var(--gray-700) !important;
+  color: var(--gray-300) !important;
+  border: 2px solid var(--gray-600) !important;
 }
 
 .w10 {
@@ -221,10 +222,20 @@ option {
 .w20 {
   width: 20vw;
 }
+.w25 {
+  width: 25vw;
+}
 .w5rem {
   width: 5rem;
 }
 
+.w3rem {
+  width: 3rem;
+}
+
+.center {
+  text-align: center;
+}
 .toggle {
   width: 3rem;
   padding: 0.2rem;

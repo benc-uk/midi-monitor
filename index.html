@@ -126,7 +126,7 @@
                     <td x-text="entry.type"></td>
                     <td x-text="entry.channel"></td>
                     <td x-text="entry.data1"></td>
-                    <td x-text="entry.data2.toString(16)"></td>
+                    <td x-text="entry.data2"></td>
                     <td x-text="entry.details"></td>
                   </tr>
                 </template>
@@ -136,10 +136,77 @@
         </section>
       </div>
 
-      <div x-show="page === '#tools'">
+      <div x-data="tools" x-show="page === '#tools'">
         <header>
-          Message Tools
+          <i class="fas fa-tools fa-fw"></i> Message Tools
         </header>
+        <section>
+          <header>Channel</header>
+          <div class="sub-section">
+            <div class="label">Number:</div>
+            <div class="output" x-text="channel+1"></div>
+            <button class="btn inline w3rem" @click="channel--; if(channel < 0) channel = 0">
+              <i class="fas fa-minus"></i>
+            </button>
+            <button class="btn inline w3rem" @click="channel++; if(channel > 15) channel = 15">
+              <i class="fas fa-plus"></i>
+            </button>
+          </div>
+        </section>
+
+        <section>
+          <header>Control Messages (CC)</header>
+          <div class="sub-section">
+            <div class="label">CC Number:</div>
+            <select x-model="ccNumber">
+              <template x-for="cc in ccList">
+                <option :value="cc.number" x-text="cc.name"></option>
+              </template>
+            </select>
+          </div>
+
+          <div class="sub-section">
+            <div class="label">Value:</div>
+            <input type="range" class="w20" min="0" max="127" x-model="ccValue"></input>
+            <div class="output gray" type="text" x-text="ccValue"></div>
+          </div>
+
+          <div class="sub-section">
+            <div class="label"></div>
+            <button class="btn inline" style="margin-left:0" @click="sendCC">
+              <i class="fas fa-envelope"></i> SEND MESSAGE
+            </button>
+          </div>
+        </section>
+
+        <section>
+          <header>Non-Registered Parameter Numbers (NRPN)</header>
+          <div class="sub-section flex">
+            <div class="label"></div>
+            <div class="w25 center">MSB</div>
+            <div class="w25 center">LSB</div>
+          </div>
+          <div class="sub-section">
+            <div class="label">Number:</div>
+            <input type="range" class="w20" min="0" max="127"></input>
+            <div class="output gray" type="text" x-text="ccValue"></div>
+            <input type="range" class="w20" min="0" max="127"></input>
+            <div class="output gray" type="text" x-text="ccValue"></div>
+          </div>
+
+          <div class="sub-section">
+            <div class="label">Value:</div>
+            <input type="range" class="w20" min="0" max="127"></input>
+            <div class="output gray" type="text" x-text="ccValue"></div>
+            <input type="range" class="w20" min="0" max="127"></input>
+            <div class="output gray" type="text" x-text="ccValue"></div>
+          </div>
+
+          <div class="label"></div>
+          <button class="btn inline" style="margin-left:0" @click="sendCC">
+            <i class="fas fa-envelope"></i> SEND MESSAGE
+          </button>
+        </section>
       </div>
 
       <div x-data="clock" @input-device-changed.window="listenForClock" @midi-ready.window="listenForClock"

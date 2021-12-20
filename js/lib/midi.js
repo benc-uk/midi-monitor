@@ -151,6 +151,11 @@ export function sendSystemMessage(deviceId, subType) {
   access.outputs.get(deviceId).send([0xf0 | subType])
 }
 
+export function sendCCMessage(deviceId, channel, cc, value) {
+  if (!access || !access.outputs.get(deviceId)) return
+  access.outputs.get(deviceId).send([0xb0 | channel, cc, value])
+}
+
 // ===================================================
 // Split a byte into two nibbles
 // ===================================================
@@ -564,3 +569,41 @@ export function noteNumberToName(number) {
       return 'Unknown'
   }
 }
+
+export const ccList = [
+  { name: 'Bank Select', number: 0 },
+  { name: 'Modulation Wheel', number: 1 },
+  { name: 'Breath Controller', number: 2 },
+  { name: 'Undefined', number: 3 },
+  { name: 'Foot Controller', number: 4 },
+  { name: 'Portamento Time', number: 5 },
+  { name: 'Data Entry MSB', number: 6 },
+  { name: 'Channel Volume', number: 7 },
+  { name: 'Balance', number: 8 },
+  { name: 'Undefined', number: 9 },
+  { name: 'Pan', number: 10 },
+  { name: 'Expression Controller', number: 11 },
+  { name: 'Effect Control 1', number: 12 },
+  { name: 'Effect Control 2', number: 13 },
+  { name: 'Undefined', number: 14 },
+  { name: 'Undefined', number: 15 },
+  { name: 'General Purpose Controller 1', number: 16 },
+  { name: 'General Purpose Controller 2', number: 17 },
+  { name: 'General Purpose Controller 3', number: 18 },
+  { name: 'General Purpose Controller 4', number: 19 },
+  { name: 'Undefined', number: 20 },
+  { name: 'Undefined', number: 21 },
+  { name: 'Undefined', number: 22 },
+  { name: 'Undefined', number: 23 },
+  { name: 'Undefined', number: 24 },
+  { name: 'Undefined', number: 25 },
+  { name: 'Undefined', number: 26 },
+  { name: 'Undefined', number: 27 },
+  { name: 'Undefined', number: 28 },
+  { name: 'Undefined', number: 29 },
+  { name: 'Undefined', number: 30 },
+  { name: 'Undefined', number: 31 },
+  { name: 'Bank Select LSB', number: 32 },
+  { name: 'Modulation Wheel', number: 33 },
+  { name: 'Breath Controller', number: 34 }
+]
