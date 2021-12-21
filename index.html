@@ -65,7 +65,7 @@
     <!-- main content -->
     <main class="flex-fill">
       <!-- config page -->
-      <div x-show="page === '#config'">
+      <div x-cloak x-transition x-show="page === '#config'">
         <header>
           <i class="fas fa-cogs fa-fw"></i> &nbsp; Configuration
         </header>
@@ -97,11 +97,37 @@
             </select>
           </div>
         </section>
+
+        <section>
+          <header>Channel</header>
+          <div class="row">
+            <div class="label">Number:</div>
+            <select class="w5rem" x-model="$store.config.channel">
+              <option value="0">1</option>
+              <option value="1">2</option>
+              <option value="2">3</option>
+              <option value="3">4</option>
+              <option value="4">5</option>
+              <option value="5">6</option>
+              <option value="6">7</option>
+              <option value="7">8</option>
+              <option value="8">9</option>
+              <option value="9">10</option>
+              <option value="10">11</option>
+              <option value="11">12</option>
+              <option value="12">13</option>
+              <option value="13">14</option>
+              <option value="14">15</option>
+              <option value="15">16</option>
+            </select>
+          </div>
+        </section>
       </div>
 
       <!-- message monitor page -->
-      <div x-data="monitor" x-show="page === '#monitor'" @midi-ready.window="listenForMonitoring"
-        @input-device-changed.window="listenForMonitoring">
+      <div x-cloak x-transition x-data="monitor" x-show="page === '#monitor'" @midi-ready.window="listenForMonitoring"
+        @input-device-changed.window="listenForMonitoring"
+        @page-change.window="if($event.detail == '#monitor') { setTimeout(() => { scrollToBottom() }, 100) }">
         <header>
           <i class="fas fa-list-alt fa-fw"></i> &nbsp; MIDI Monitor
         </header>
@@ -144,25 +170,10 @@
       </div>
 
       <!-- Message tools page -->
-      <div x-data="tools" x-show="page === '#tools'">
+      <div x-cloak x-transition x-data="tools" x-show="page === '#tools'">
         <header>
           <i class="fas fa-tools fa-fw"></i> Message Tools
         </header>
-        <section>
-          <header>Channel</header>
-          <div class="row">
-            <div class="label">Number:</div>
-            <div class="output w4rem block" x-text="$store.config.channel+1"></div>
-            <button class="btn inline w3rem"
-              @click="$store.config.channel--; if($store.config.channel < 0) $store.config.channel = 0; $store.config.save()">
-              <i class="fas fa-minus"></i>
-            </button>
-            <button class="btn inline w3rem"
-              @click="$store.config.channel++; if($store.config.channel > 15) $store.config.channel = 15; $store.config.save()">
-              <i class="fas fa-plus"></i>
-            </button>
-          </div>
-        </section>
 
         <section>
           <header>Control Messages (CC)</header>
@@ -243,8 +254,8 @@
       </div>
 
       <!-- Clock page -->
-      <div x-data="clock" @input-device-changed.window="listenForClock" @midi-ready.window="listenForClock"
-        x-show="page === '#clock'">
+      <div x-cloak x-transition x-data="clock" @input-device-changed.window="listenForClock"
+        @midi-ready.window="listenForClock" x-show="page === '#clock'">
         <header>
           <i class="fas fa-clock fa-fw"></i> &nbsp; Clock &amp; Transport Tools
         </header>
@@ -282,46 +293,129 @@
         </section>
       </div>
 
-      <div x-data="keys" x-show="page === '#keys'">
+      <!-- Keyboard page -->
+      <div x-cloak x-transition x-data="keys" x-show="page === '#keys'">
         <header>
           <i class="fas fa-music fa-fw"></i> &nbsp; Keyboard
         </header>
 
-        <div class="row" style="gap: 0.3rem">
-          <div class="key" @mousedown="playKey(0)" @mouseup="releaseKey(0)">
+        <div class="row">
+          Octave: &nbsp;
+          <select x-model="offset">
+            <option value="0">1</option>
+            <option value="12">2</option>
+            <option value="24">3</option>
+            <option value="36">4</option>
+            <option value="48">5</option>
+            <option value="60">6</option>
+            <option value="72">7</option>
+            <option value="84">8</option>
+            <option value="96">9</option>
+            <option value="108">10</option>
+          </select>
+
+          <div class="w10rem"></div>
+          Velocity: &nbsp;
+          <select x-model="velocity">
+            <option value="20">20</option>
+            <option value="40">40</option>
+            <option value="60">60</option>
+            <option value="80">80</option>
+            <option value="100">100</option>
+            <option value="127">127</option>
+          </select>
+        </div>
+
+        <div class="row" style="justify-content: center;">
+          <div class="key" @mousedown.stop="playKey(0)" @mouseup.stop="releaseKey(0)" @mouseleave.stop="releaseKey(0)">
             <span>C</span>
-            <div class="key-black" @mousedown="playKey(1)" @mouseup="releaseKey(1)">
+            <div class="key-black" @mousedown.stop="playKey(1)" @mouseup.stop="releaseKey(1)"
+              @mouseleave.stop="releaseKey(1)">
               <span>C♯</span>
             </div>
           </div>
-          <div class="key">
-            <span @click="playKey(2)">D</span>
-            <div class="key-black">
+          <div class="key" @mousedown.stop="playKey(2)" @mouseup.stop="releaseKey(2)" @mouseleave.stop="releaseKey(2)">
+            <span>D</span>
+            <div class="key-black" @mousedown.stop="playKey(3)" @mouseup.stop="releaseKey(3)"
+              @mouseleave.stop="releaseKey(3)">
               <span>D♯</span>
             </div>
           </div>
-          <div class="key">
+          <div class="key" @mousedown.stop="playKey(4)" @mouseup.stop="releaseKey(4)" @mouseleave.stop="releaseKey(4)">
             <span>E</span>
           </div>
-          <div class="key">
+          <div class="key" @mousedown.stop="playKey(5)" @mouseup.stop="releaseKey(5)" @mouseleave.stop="releaseKey(5)">
             <span>F</span>
-            <div class="key-black">
+            <div class="key-black" @mousedown.stop="playKey(6)" @mouseup.stop="releaseKey(6)"
+              @mouseleave.stop="releaseKey(6)">
               <span>F♯</span>
             </div>
           </div>
-          <div class="key">
+          <div class="key" @mousedown.stop="playKey(7)" @mouseup.stop="releaseKey(7)" @mouseleave.stop="releaseKey(7)">
             <span>G</span>
-            <div class="key-black">
+            <div class="key-black" @mousedown.stop="playKey(8)" @mouseup.stop="releaseKey(8)"
+              @mouseleave.stop="releaseKey(8)">
               <span>G♯</span>
             </div>
           </div>
-          <div class="key">
+          <div class="key" @mousedown.stop="playKey(9)" @mouseup.stop="releaseKey(9)" @mouseleave.stop="releaseKey(9)">
             <span>A</span>
-            <div class="key-black">
+            <div class="key-black" @mousedown.stop="playKey(10)" @mouseup.stop="releaseKey(10)"
+              @mouseleave.stop="releaseKey(10)">
               <span>A♯</span>
             </div>
           </div>
-          <div class="key">
+          <div class="key" @mousedown.stop="playKey(11)" @mouseup.stop="releaseKey(11)"
+            @mouseleave.stop="releaseKey(11)">
+            <span>B</span>
+          </div>
+
+          <div class="key" @mousedown.stop="playKey(12)" @mouseup.stop="releaseKey(12)"
+            @mouseleave.stop="releaseKey(12)">
+            <span>C</span>
+            <div class="key-black" @mousedown.stop="playKey(13)" @mouseup.stop="releaseKey(13)"
+              @mouseleave.stop="releaseKey(13)">
+              <span>C♯</span>
+            </div>
+          </div>
+          <div class="key" @mousedown.stop="playKey(14)" @mouseup.stop="releaseKey(14)"
+            @mouseleave.stop="releaseKey(14)">
+            <span>D</span>
+            <div class="key-black" @mousedown.stop="playKey(15)" @mouseup.stop="releaseKey(15)"
+              @mouseleave.stop="releaseKey(15)">
+              <span>D♯</span>
+            </div>
+          </div>
+          <div class="key" @mousedown.stop="playKey(16)" @mouseup.stop="releaseKey(16)"
+            @mouseleave.stop="releaseKey(16)">
+            <span>E</span>
+          </div>
+          <div class="key" @mousedown.stop="playKey(17)" @mouseup.stop="releaseKey(17)"
+            @mouseleave.stop="releaseKey(17)">
+            <span>F</span>
+            <div class="key-black" @mousedown.stop="playKey(18)" @mouseup.stop="releaseKey(18)"
+              @mouseleave.stop="releaseKey(18)">
+              <span>F♯</span>
+            </div>
+          </div>
+          <div class="key" @mousedown.stop="playKey(19)" @mouseup.stop="releaseKey(19)"
+            @mouseleave.stop="releaseKey(19)">
+            <span>G</span>
+            <div class="key-black" @mousedown.stop="playKey(20)" @mouseup.stop="releaseKey(20)"
+              @mouseleave.stop="releaseKey(20)">
+              <span>G♯</span>
+            </div>
+          </div>
+          <div class="key" @mousedown.stop="playKey(21)" @mouseup.stop="releaseKey(21)"
+            @mouseleave.stop="releaseKey(21)">
+            <span>A</span>
+            <div class="key-black" @mousedown.stop="playKey(22)" @mouseup.stop="releaseKey(22)"
+              @mouseleave.stop="releaseKey(22)">
+              <span>A♯</span>
+            </div>
+          </div>
+          <div class="key" @mousedown.stop="playKey(23)" @mouseup.stop="releaseKey(23)"
+            @mouseleave.stop="releaseKey(23)">
             <span>B</span>
           </div>
         </div>

@@ -16,7 +16,7 @@ export const clockComponent = () => ({
   sendClockTimer: null,
 
   init() {
-    console.log('### Initializing clock')
+    console.log('### 🕐 Initializing clock')
     this.incomingBpm = -1
     this.lastTransport = '···'
     this.calcBPM = this.calcBPM.bind(this)
@@ -69,19 +69,18 @@ export const clockComponent = () => ({
 
   listenForClock() {
     if (this.monitoredDevice) {
-      midi.access.inputs.get(this.monitoredDevice).removeEventListener('midimessage', this.messageListener)
+      const device = midi.getInputDevice(this.monitoredDevice)
+      device.removeEventListener('midimessage', this.messageListener)
     }
 
     const inputDevice = Alpine.store('config').inputDevice
-    if (!midi.access.inputs.get(inputDevice)) {
-      return
-    }
+    const device = midi.getInputDevice(inputDevice)
 
     this.resetClock()
 
-    if (midi.access.inputs.get(inputDevice)) {
+    if (device) {
       this.messageListener = this.messageListener.bind(this)
-      midi.access.inputs.get(inputDevice).addEventListener('midimessage', this.messageListener)
+      device.addEventListener('midimessage', this.messageListener)
       this.monitoredDevice = inputDevice
     }
   },

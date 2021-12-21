@@ -20,21 +20,17 @@ export const monitorComponent = () => ({
 
   listenForMonitoring() {
     if (this.monitoredDevice) {
-      midi.access.inputs.get(this.monitoredDevice).removeEventListener('midimessage', this.messageListener)
+      const device = midi.getInputDevice(this.monitoredDevice)
+      device.removeEventListener('midimessage', this.messageListener)
     }
 
     const inputDevice = Alpine.store('config').inputDevice
-    if (!inputDevice) return
+    const device = midi.getInputDevice(inputDevice)
 
-    console.log(`### Start monitoring ${inputDevice}`)
-    if (!midi.access.inputs.get(inputDevice)) {
-      return
-    }
-
-    if (midi.access.inputs.get(inputDevice)) {
+    if (device) {
       this.log.push({ timestamp: new Date(), type: '[ Monitoring started ]' })
       this.messageListener = this.messageListener.bind(this)
-      midi.access.inputs.get(inputDevice).addEventListener('midimessage', this.messageListener)
+      device.addEventListener('midimessage', this.messageListener)
       this.monitoredDevice = inputDevice
     }
   },

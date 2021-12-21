@@ -5,6 +5,7 @@ import { toolsComponent } from './comp/tools.js'
 import { keysComponent } from './comp/keys.js'
 import * as midi from './lib/midi.js'
 
+const VERSION = '0.0.1'
 Alpine.data('app', () => ({
   page: '',
   inputDevices: [],
@@ -12,44 +13,63 @@ Alpine.data('app', () => ({
   midiAccess: null,
 
   async init() {
+    console.log(`### =====================================\n###  🎹🧰 MIDI Toolkit v${VERSION}\n### =====================================`)
+
+    this.setupDevices = this.setupDevices.bind(this)
+    await midi.getAccess(this.setupDevices)
+    this.setupDevices()
+
+    // Connect to devices, if present
+    const inputDeviceId = Alpine.store('config').inputDevice
+    const outputDeviceId = Alpine.store('config').outputDevice
+    let midiDevice = midi.getInputDevice(inputDeviceId)
+    if (midiDevice) {
+      console.log(`### 📥 Using input device ${midiDevice.name}`)
+      this.$dispatch('midi-ready')
+    } else if (inputDeviceId) {
+      console.log(`### ⛔ Device ${inputDeviceId} is no longer present`)
+      Alpine.store('config').inputDevice = ''
+      Alpine.store('config').save()
+    }
+
+    midiDevice = midi.getOutputDevice(outputDeviceId)
+    if (midiDevice) {
+      console.log(`### 📤 Using output device ${midiDevice.name}`)
+      this.$dispatch('midi-ready')
+    } else if (outputDeviceId) {
+      console.log(`### ⛔ Device ${outputDeviceId} is no longer present`)
+      Alpine.store('config').outputDevice = ''
+      Alpine.store('config').save()
+    }
+
+    this.$watch('page', (newPage) => {
+      this.$dispatch('page-change', newPage)
+    })
+
     if (!window.location.hash) {
       window.location.hash = '#monitor'
       this.page = '#monitor'
     }
     this.page = window.location.hash
-    await midi.getAccess(this.setupDevices)
-    midi.access.onstatechange = () => this.setupDevices()
-    this.setupDevices()
 
-    // Connect to device if present
-    const inputDevice = Alpine.store('config').inputDevice
-    if (inputDevice && midi.access.inputs.get(inputDevice)) {
-      console.log(`### Using input device ${midi.access.inputs.get(inputDevice).name}`)
-      this.$dispatch('midi-ready')
-    } else if (inputDevice) {
-      console.log(`### WARNING! Device ${inputDevice} is no longer present`)
-      Alpine.store('config').inputDevice = ''
-      Alpine.store('config').save()
-    }
-
-    const outputDevice = Alpine.store('config').outputDevice
-    if (outputDevice && midi.access.outputs.get(outputDevice)) {
-      console.log(`### Using output device ${midi.access.outputs.get(outputDevice).name}`)
-      this.$dispatch('midi-ready')
-    } else if (outputDevice) {
-      console.log(`### WARNING! Device ${outputDevice} is no longer present`)
-      Alpine.store('config').outputDevice = ''
-      Alpine.store('config').save()
+    if (!Alpine.store('config').inputDevice && !Alpine.store('config').outputDevice) {
+      window.location.hash = '#config'
+      this.page = '#config'
     }
   },
 
   setupDevices() {
-    console.log('### Detecting MIDI devices...')
+    // Skip when the number of devices has not changed
+    if (this.inputDevices.length == midi.getInputDevices().size && this.outputDevices.length == midi.getOutputDevices().size) {
+      return
+    }
+
+    console.log('### 🩺 Detecting MIDI devices...')
 
     this.inputDevices = []
     this.outputDevices = []
-    for (let input of midi.access.inputs.values()) {
-      console.log(` <- ${input.id}:${input.name}:${input.manufacturer}`)
+    for (let input of midi.getInputDevices().values()) {
+      console.log(` ⬅️ ${input.id}\t\t${input.name} ${input.manufacturer ? `\t(${input.manufacturer})` : ''}`)
 
       this.inputDevices.push({
         name: input.name,
@@ -58,8 +78,8 @@ Alpine.data('app', () => ({
       })
     }
 
-    for (let output of midi.access.outputs.values()) {
-      console.log(` -> ${output.id}:${output.name}:${output.manufacturer}`)
+    for (let output of midi.getOutputDevices().values()) {
+      console.log(` ➡️ ${output.id}\t${output.name} ${output.manufacturer ? `\t(${output.manufacturer})` : ''}`)
 
       this.outputDevices.push({
         name: output.name,

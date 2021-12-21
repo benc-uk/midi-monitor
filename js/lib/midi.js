@@ -1,5 +1,5 @@
 // Global MIDI access
-export let access
+let access
 
 export const MSG_STATUS_SYSTEM = 15
 
@@ -28,14 +28,16 @@ export const MSG_POLY_AFTERTOUCH = 10
 export const MSG_NOTE_ON = 9
 export const MSG_NOTE_OFF = 8
 
-// =================================================
+// ===============================================================================
 // Attempt to get MIDI access and hold it globally
-// =================================================
-export async function getAccess() {
+// ===============================================================================
+export async function getAccess(stateChangeCallback) {
   try {
     if (!access) {
       access = await navigator.requestMIDIAccess()
     }
+
+    if (stateChangeCallback) access.onstatechange = () => stateChangeCallback()
 
     return access
   } catch (err) {
@@ -43,6 +45,69 @@ export async function getAccess() {
   }
 }
 
+// ===============================================================================
+// Direct access to MIDI access inputs map https://tinyurl.com/394y49b8
+// ===============================================================================
+export function getInputDevices() {
+  if (!access) {
+    console.error('MIDI getInputDevices failed: no access')
+    return null
+  }
+  return access.inputs
+}
+
+// ===============================================================================
+// Direct access to MIDI access outputs map https://tinyurl.com/394y49b8
+// ===============================================================================
+export function getOutputDevices() {
+  if (!access) {
+    console.error('MIDI getOutputDevices failed: no access')
+    return null
+  }
+  return access.outputs
+}
+
+// ===============================================================================
+// Helper to get MIDI output device by id
+// ===============================================================================
+export function getOutputDevice(deviceId) {
+  if (!access) {
+    console.error('MIDI access not available')
+    return null
+  }
+  if (!deviceId) {
+    //console.warn(`MIDI output device ID empty`)
+    return null
+  }
+  if (!access.outputs.get(deviceId)) {
+    console.warn(`MIDI output device ${deviceId} not available`)
+    return null
+  }
+  return access.outputs.get(deviceId)
+}
+
+// ===============================================================================
+// Helper to get MIDI input device by id
+// ===============================================================================
+export function getInputDevice(deviceId) {
+  if (!access) {
+    console.error('MIDI access not available')
+    return null
+  }
+  if (!deviceId) {
+    //console.error(`MIDI input device ID empty`)
+    return null
+  }
+  if (!access.inputs.get(deviceId)) {
+    console.warn(`MIDI input device ${deviceId} not available`)
+    return null
+  }
+  return access.inputs.get(deviceId)
+}
+
+// ===============================================================================
+//
+// ===============================================================================
 export function decodeMessage(msg) {
   let output = {
     timestamp: new Date(),
@@ -138,59 +203,112 @@ export function decodeMessage(msg) {
   return output
 }
 
+// ===============================================================================
+//
+// ===============================================================================
 export function sendNoteOnMessage(deviceId, channel, noteNum, velocity) {
-  if (!access || !access.outputs.get(deviceId)) return
-  console.log('sendNoteOnMessage', deviceId, channel, noteNum, velocity)
-  access.outputs.get(deviceId).send([0x90 | channel, noteNum, velocity])
-}
+  if (!validMessageParameters(channel, noteNum, velocity)) return
 
-export function sendNoteOffMessage(deviceId, channel, noteNum) {
-  if (!access || !access.outputs.get(deviceId)) return
-  console.log('sendNoteOffMessage', deviceId, channel, noteNum, 0)
-  access.outputs.get(deviceId).send([0x80 | channel, noteNum, 0])
-}
-
-export function sendSystemMessage(deviceId, subType) {
-  if (!access || !access.outputs.get(deviceId)) return
-  access.outputs.get(deviceId).send([0xf0 | subType])
-}
-
-export function sendCCMessage(deviceId, channel, cc, value) {
-  if (!access || !access.outputs.get(deviceId)) return
-  access.outputs.get(deviceId).send([0xb0 | channel, cc, value])
-}
-
-export function sendNRPNMessage(deviceId, channel, numMsb, numLsb, valueMsb, valueLsb) {
-  console.log('sendNRPNMessage', deviceId, channel, numMsb, numLsb, valueMsb, valueLsb)
-  if (!access || !access.outputs.get(deviceId)) return
-  access.outputs.get(deviceId).send([0xb0 | channel, 99, numMsb])
-  access.outputs.get(deviceId).send([0xb0 | channel, 98, numLsb])
-  access.outputs.get(deviceId).send([0xb0 | channel, 6, valueMsb])
-
-  if (valueLsb >= 0) {
-    access.outputs.get(deviceId).send([0xb0 | channel, 38, valueLsb])
+  const device = getOutputDevice(deviceId)
+  if (device) {
+    device.send([0x90 | channel, noteNum, velocity])
   }
 }
 
-// ===================================================
+// ===============================================================================
+//
+// ===============================================================================
+export function sendNoteOffMessage(deviceId, channel, noteNum) {
+  if (!validMessageParameters(channel, noteNum)) return
+
+  const device = getOutputDevice(deviceId)
+  if (device) {
+    device.send([0x80 | channel, noteNum, 0])
+  }
+}
+
+// ===============================================================================
+//
+// ===============================================================================
+export function sendSystemMessage(deviceId, subType) {
+  if (subType < 0 || subType > 15) {
+    console.warn(`Invalid MIDI system message subtype: ${subType} (should be 0 - 15)`)
+    return
+  }
+
+  const device = getOutputDevice(deviceId)
+  if (device) {
+    device.send([0xf0 | subType])
+  }
+}
+
+// ===============================================================================
+//
+// ===============================================================================
+export function sendCCMessage(deviceId, channel, cc, value) {
+  if (!validMessageParameters(channel, cc, value)) return
+
+  const device = getOutputDevice(deviceId)
+  if (device) {
+    device.send([0xb0 | channel, cc, value])
+  }
+}
+
+// ===============================================================================
+//
+// ===============================================================================
+export function sendNRPNMessage(deviceId, channel, numMsb, numLsb, valueMsb, valueLsb) {
+  if (!validMessageParameters(channel, cc, numMsb, numLsb, valueMsb, valueLsb)) return
+
+  const device = getOutputDevice(deviceId)
+  if (device) {
+    device.send([0xb0 | channel, 99, numMsb])
+    device.send([0xb0 | channel, 98, numLsb])
+    device.send([0xb0 | channel, 6, valueMsb])
+    if (valueLsb >= 0) {
+      access.outputs.get(deviceId).send([0xb0 | channel, 38, valueLsb])
+    }
+  }
+}
+
+// ===============================================================================
+// Helper to validate message parameters
+// ===============================================================================
+function validMessageParameters(channel, ...inputs) {
+  if (channel > 15 || channel < 0) {
+    console.warn('Invalid MIDI channel number', channel)
+    return false
+  }
+
+  for (let input of inputs) {
+    if (input < 0 || input > 127) {
+      console.warn('Number out of range for MIDI message', input)
+      return false
+    }
+  }
+
+  return true
+}
+
+// =================================================================================
 // Split a byte into two nibbles
-// ===================================================
+// =================================================================================
 export function byteToNibbles(byte) {
   const high = byte & 0xf
   const low = byte >> 4
   return [low, high]
 }
 
-// ===================================================
+// =================================================================================
 // Convert a two part (MSB, LSB) num to a 14 bit value
-// ===================================================
+// =================================================================================
 export function bytePairtoNumber(msb, lsb) {
   return (msb << 7) + lsb
 }
 
-// ===================================================
+// =================================================================================
 // Convert MIDI CC number to a name
-// ===================================================
+// =================================================================================
 export function ccNumberToName(number) {
   switch (number) {
     case 0:
@@ -320,9 +438,9 @@ export function ccNumberToName(number) {
   }
 }
 
-// ===================================================
+// =================================================================================
 // MIDI note number to name
-// ===================================================
+// =================================================================================
 export function noteNumberToName(number) {
   switch (number) {
     case 0:
@@ -586,6 +704,9 @@ export function noteNumberToName(number) {
   }
 }
 
+// =================================================================================
+// Map of MIDI CC names
+// =================================================================================
 export const ccList = {
   0: 'Bank Select MSB',
   1: 'Modulation Wheel',
