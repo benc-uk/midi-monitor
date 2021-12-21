@@ -5,12 +5,14 @@ import { toolsComponent } from './comp/tools.js'
 import { keysComponent } from './comp/keys.js'
 import * as midi from './lib/midi.js'
 
-const VERSION = '0.0.1'
+const VERSION = '1.0.0'
+
 Alpine.data('app', () => ({
   page: '',
   inputDevices: [],
   outputDevices: [],
-  midiAccess: null,
+  showAbout: false,
+  version: VERSION,
 
   async init() {
     console.log(`### =====================================\n###  🎹🧰 MIDI Toolkit v${VERSION}\n### =====================================`)

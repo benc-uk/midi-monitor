@@ -9,6 +9,12 @@ body {
   display: none !important;
 }
 
+@media only screen and (max-width: 800px) {
+  .hide-narrow {
+    display: none;
+  }
+}
+
 #app {
   display: flex;
   background-color: var(--zinc-900);
@@ -18,12 +24,6 @@ body {
 nav {
   background-color: var(--slate-800);
   padding: 0.5rem;
-  /* min-width: 35vw;
-  max-width: 35vw; */
-  /* width: 40vw; */
-  /* display: block; */
-  /* flex: 0 0 40vw; */
-  /* display: block; */
   flex-shrink: 0;
 }
 
@@ -69,9 +69,15 @@ section header {
   text-align: center;
   font-weight: 700;
   background-color: var(--zinc-800);
-  padding: 1rem;
+  padding: 0.5rem;
   border: 4px solid var(--zinc-900);
   border-radius: 7px;
+  cursor: pointer;
+}
+.navhead img {
+  width: 4rem;
+  margin: 0 auto;
+  padding-bottom: 0.2rem;
 }
 
 main {
@@ -94,6 +100,7 @@ hr {
   font-weight: bold;
   text-align: center;
   border: 0;
+  min-width: 2.5rem;
 }
 .btn:hover {
   filter: brightness(80%);
@@ -256,6 +263,9 @@ select:focus {
   width: 25vw;
 }
 
+.w12rem {
+  width: 12rem;
+}
 .w8rem {
   width: 8rem;
 }
@@ -295,6 +305,14 @@ select:focus {
 }
 
 /* piano keys */
+.key-wrapper {
+  justify-content: center;
+  background-color: var(--slate-600);
+  padding: 3rem;
+  padding-top: 1rem;
+  border-radius: 0.75rem;
+  gap: 0.2rem;
+}
 
 .key {
   background-color: white;
@@ -307,6 +325,9 @@ select:focus {
   margin: 0;
   cursor: pointer;
   user-select: none;
+  box-shadow: inset -2px -4px 4px var(--zinc-600), 0px 4px 12px var(--zinc-900);
+  border: 1px solid var(--zinc-800);
+  border-radius: 0 0 0.4rem 0.4rem;
 }
 .key span {
   bottom: 0;
@@ -323,10 +344,11 @@ select:focus {
   height: 8rem;
   width: 2.5rem;
   position: absolute;
-  box-shadow: 0px 4px 12px var(--zinc-900);
+  box-shadow: inset -2px -4px 4px black, 0px 4px 12px var(--zinc-900);
+  border-radius: 0 0 0.4rem 0.4rem;
   z-index: 30;
-  left: 2rem;
-  top: 0;
+  left: 1.8rem;
+  top: -0.2rem;
   cursor: pointer;
   user-select: none;
 }
@@ -334,4 +356,47 @@ select:focus {
   width: 2.5rem;
   color: var(--gray-500);
   font-size: 1.3rem;
+}
+
+.key-black.pressed {
+  box-shadow: inset 0px -2px 4px black, 0px 2px 4px var(--zinc-800);
+}
+
+.pressed {
+  box-shadow: inset 0px -2px 4px var(--zinc-600), 0px 2px 4px var(--zinc-800);
+}
+
+/* modal */
+
+.dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 20rem;
+  height: 15rem;
+  background-color: rgba(30, 30, 30, 0.7);
+  backdrop-filter: blur(10px);
+  border: 3px solid var(--zinc-600);
+  box-shadow: 0px 5px 20px black;
+  z-index: 100;
+  transform: translate(-10rem, -7rem);
+  border-radius: 0.4rem;
+}
+
+.dialog header {
+  background-color: var(--gray-500);
+}
+.dialog ul {
+  padding-left: 3rem;
+  font-size: 1.2rem;
+}
+.dialog li {
+  list-style: square;
+}
+
+.modalwrapper {
+  filter: brightness(0.7) blur(10px);
+}
+.right {
+  float: right;
 }
